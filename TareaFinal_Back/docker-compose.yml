@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+
+  gestion:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-gestion:3306/gestion?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    depends_on:
+      mysql-gestion:
+        condition: service_healthy
+    networks:
+      - gestion-network
+
+
+  mysql-gestion:
+    image: mariadb:latest
+    container_name: mysql-gestion
+    hostname: mysql-gestion
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gestion
+    ports:
+      - "3307:3306"
+    networks:
+      - gestion-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  gestion-network:
+    driver: bridge
